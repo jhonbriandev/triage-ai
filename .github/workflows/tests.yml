@@ -34,8 +34,8 @@ jobs:
           python-version: "3.11"
 
       - name: Instalar dependencias
-        run: |
-          - run: pip install -r backend/requirements.txt
+
+        run: pip install -r backend/requirements.txt
 
       - name: Ejecutar tests
         env:
@@ -44,3 +44,5 @@ jobs:
           DATABASE_URL: postgres://postgres:postgres@localhost:5432/test_db
         run: |
           pytest --tb=short
+
+# new
