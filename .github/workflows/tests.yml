@@ -40,9 +40,10 @@ jobs:
       - name: Ejecutar tests
         env:
           SECRET_KEY: test-secret-key
-          DEBUG: True
+          DEBUG: "True"
           DATABASE_URL: postgres://postgres:postgres@localhost:5432/test_db
-        run: |
-          pytest --tb=short
+          DJANGO_SETTINGS_MODULE: config.settings
+          PYTHONPATH: backend
+        run: pytest --tb=short
 
 # new
