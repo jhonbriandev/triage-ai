@@ -81,7 +81,7 @@ class TicketSerializer(serializers.ModelSerializer):
         read_only=True,
         default=None
     )
-
+    suggestion_ai = serializers.SerializerMethodField()
     # --------------------------------------------------------
     # CAMPOS DERIVADOS DE choices
     # --------------------------------------------------------
@@ -109,7 +109,7 @@ class TicketSerializer(serializers.ModelSerializer):
     )
 
     #Saber si tiene sugerencia
-    has_suggestion_ia = serializers.SerializerMethodField()
+    has_suggestion_ai = serializers.SerializerMethodField()
     
     class Meta:
         model = Ticket
@@ -143,7 +143,9 @@ class TicketSerializer(serializers.ModelSerializer):
 
             'created_at',
             'has_suggestion_ia',
-        ]
+            
+            'suggestion_ai',
+            ]
 
         # Estos campos pueden aparecer en la respuesta,
         # pero el cliente no puede modificarlos mediante
@@ -151,14 +153,19 @@ class TicketSerializer(serializers.ModelSerializer):
         read_only_fields = [
             'customer',
             'created_at',
-            'has_suggestion_ia',
+            'has_suggestion_ai',
             'customer',
             
         ]
-    def get_has_suggestion_ia(self, obj):
+    def get_has_suggestion_ai(self, obj):
         # suggestion_ai tal como el related name de SuggestionAi
         return hasattr(obj,'suggestion_ai')
 
+    def get_suggestion_ai(self, obj):
+        if hasattr(obj, 'suggestion_ai'):
+            return SuggestionAiSerializer(obj.suggestion_ai).data
+        return None
+    
 # ============================================================
 # SUGGESTION AI
 # ============================================================
@@ -174,7 +181,7 @@ class SuggestionAiSerializer(serializers.ModelSerializer):
             'suggestion_category',
             'suggestion_priority',
             'generated_summary',
-            'suggestion_answe',
+            'suggestion_answer',
             'generation_date',
             'updated_at',
         ]
