@@ -142,7 +142,7 @@ class TicketSerializer(serializers.ModelSerializer):
             'assigned_agent_username',
 
             'created_at',
-            'has_suggestion_ia',
+            'has_suggestion_ai',
             
             'suggestion_ai',
             ]

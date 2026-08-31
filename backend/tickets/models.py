@@ -26,7 +26,7 @@ class Ticket(models.Model):
 
     customer = models.ForeignKey(User,on_delete=models.PROTECT, related_name='created_tickets')
     assigned_agent = models.ForeignKey(User,on_delete=models.SET_NULL, null=True, blank=True, related_name='assigned_tickets')
-    category = models.ForeignKey(Category,on_delete=models.PROTECT, related_name='tickets')
+    category = models.ForeignKey(Category,on_delete=models.SET_NULL, null=True, blank=True, related_name='tickets')
     title = models.CharField(max_length= 200)
     description = models.TextField()
     status = models.CharField(max_length=20, choices= Status.choices, default=Status.ABIERTO)

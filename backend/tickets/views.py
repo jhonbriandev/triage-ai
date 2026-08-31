@@ -41,11 +41,18 @@ class CommentaryViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         user = self.request.user
         rol = user.profile.rol
+        base = Commentary.objects.select_related('ticket', 'author')
         if rol == 'admin':
-            return Commentary.objects.all()
-        if rol == 'agent':
-            return Commentary.objects.filter(ticket__assigned_agent = user)
-        return Commentary.objects.filter(ticket__customer = user)
+            queryset = base
+        elif rol == 'agent':
+            queryset = base.filter(ticket__assigned_agent=user)
+        else :
+            queryset = base.filter(ticket__customer=user)
+            
+        ticked_id = self.request.query_params.get('ticket')
+        if ticked_id:
+            queryset = queryset.filter(ticket_id=ticked_id)
+        return queryset
     
     def perform_create(self,serializer):
         ticket = serializer.validated_data['ticket']
