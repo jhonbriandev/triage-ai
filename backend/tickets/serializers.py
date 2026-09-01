@@ -44,7 +44,7 @@ class CommentarySerializer(serializers.ModelSerializer):
             'text',
             'created_at'
         ]
-        read_only_fields = ['author']
+        read_only_fields = ['author','created_at']
 
 # ============================================================
 # TICKET
@@ -61,7 +61,8 @@ class TicketSerializer(serializers.ModelSerializer):
     # category.name  → nombre de la categoría
     category_name = serializers.CharField(
         source='category.name',
-        read_only=True
+        read_only=True,
+        default=None
     )
 
     # customer es una FK hacia User.
@@ -162,6 +163,14 @@ class TicketSerializer(serializers.ModelSerializer):
         return hasattr(obj,'suggestion_ai')
 
     def get_suggestion_ai(self, obj):
+        request = self.context.get('request')
+        if request is None or not request.user.is_authenticated:
+            return None
+        # Un cliente nunca ve el analisis interno de la IA -- eso es
+        # informacion de triage para el equipo de soporte, no para el
+        # cliente que reporto el problema.
+        if request.user.profile.role not in ('agent', 'admin'):
+            return None
         if hasattr(obj, 'suggestion_ai'):
             return SuggestionAiSerializer(obj.suggestion_ai).data
         return None

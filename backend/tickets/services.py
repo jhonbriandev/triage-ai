@@ -1,4 +1,5 @@
 import json
+import time
 import logging
 from django.conf import settings
 from google import genai
@@ -29,34 +30,53 @@ Descripción del ticket: {description}
 EXPECTED_FIELDS = {'suggestion_category', 'suggestion_priority', 'generated_summary', 'suggestion_answer'}
 VALID_PRIORITY = {'baja', 'media', 'alta', 'urgente'}
 
-def generate_suggestion_ia(ticket):
+def generate_suggestion_ia(ticket, max_tried = 3):
     """
     Llama a la API de Gemini con el título y la descripción del ticket, y
     devuelve un diccionario con las 4 claves que espera el modelo SugerenciaIA.
 
     Nunca deja escapar una excepción distinta a ErrorGeneracionIA — quien
     llama a esta función solo necesita saber "funcionó" o "no funcionó".
+    
+    Reintenta hasta max_intentos veces si Gemini responde 503
+    (sobrecarga temporal). Otros errores no se reintentan, porque
+    reintentar un JSON mal formado no lo va a arreglar.
+    
     """
     prompt = PROMPT_BASE.format(title=ticket.title, description=ticket.description)
+    for tried in range(max_tried):
+        try:
+            client = genai.Client(
+                api_key=settings.GEMINI_API_KEY,
+                http_options=types.HttpOptions(timeout=15000),  # 15 segundos, en milisegundos
+            )
+            response = client.models.generate_content(
+                model='gemini-3.6-flash',
+                contents=prompt,
+                config=types.GenerateContentConfig(
+                    response_mime_type='application/json',
+                ),
+            )
+            break # si llegó aquí, sí funcionó — salimos del bucle de reintentos
+        except errors.APIError as exc:
+            is_temporal = getattr(exc, 'code', None) in (503, 429)
+            # 503 = sobrecarga, 429 = demasiadas peticiones — ambos son "inténtalo después"
 
-    try:
-        client = genai.Client(
-            api_key=settings.GEMINI_API_KEY,
-            http_options=types.HttpOptions(timeout=15000),  # 15 segundos, en milisegundos
-        )
-        response = client.models.generate_content(
-            model='gemini-3.6-flash',
-            contents=prompt,
-            config=types.GenerateContentConfig(
-                response_mime_type='application/json',
-            ),
-        )
-    except errors.APIError as exc:
-        logger.warning('Gemini respondió con un error para el ticket #%s: %s', ticket.pk, exc)
-        raise ErrorGenerationIA(f'La API de Gemini respondió con un error: {exc}') from exc
-    except Exception as exc:
-        logger.warning('Fallo inesperado llamando a Gemini para el ticket #%s: %s', ticket.pk, exc)
-        raise ErrorGenerationIA(f'No se pudo contactar a la IA: {exc}') from exc
+            if is_temporal and tried < max_tried - 1:
+                wait = 2 ** tried  # 1er reintento: 1s, 2do: 2s, 3er: 4s
+                logger.warning(
+                    'Gemini saturado (intento %s/%s) para ticket #%s, reintentando en %ss',
+                    tried + 1, max_tried, ticket.pk, wait,
+                )
+                time.sleep(wait)
+                continue  # vuelve a intentar
+
+            logger.warning('Gemini respondió con un error para el ticket #%s: %s', ticket.pk, exc)
+            raise ErrorGenerationIA(f'La API de Gemini respondió con un error: {exc}') from exc
+ 
+        except Exception as exc:
+            logger.warning('Fallo inesperado llamando a Gemini para el ticket #%s: %s', ticket.pk, exc)
+            raise ErrorGenerationIA(f'No se pudo contactar a la IA: {exc}') from exc
 
     try:
         data = json.loads(response.text)

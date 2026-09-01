@@ -28,17 +28,17 @@ class AgentFactory(UserFactory):
     @factory.post_generation
     def be_agent(self, create, extracted, **kwargs):
         if create:
-            self.profile.rol = Profile.Rol.AGENT
+            self.profile.role = Profile.Role.AGENT
             self.profile.save()
 
 
 class AdminFactory(UserFactory):
-    """Igual que UserFactory, pero sube el rol a 'admin' después de crearse."""
+    """Igual que UserFactory, pero sube el role a 'admin' después de crearse."""
 
     @factory.post_generation
     def be_admin(self, create, extracted, **kwargs):
         if create:
-            self.profile.rol = Profile.Rol.ADMINISTRATOR
+            self.profile.role = Profile.Role.ADMINISTRATOR
             self.profile.save()
 
 

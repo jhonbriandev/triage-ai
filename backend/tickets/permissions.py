@@ -23,20 +23,20 @@ class PermissionTicket(permissions.BasePermission):
         # Este segundo método SÍ conoce el objeto concreto (obj = el
         # ticket puntual que se está pidiendo/editando). Aquí es
         # donde decidimos el acceso "fino", según el rol del usuario.
-        rol = request.user.profile.rol
+        role = request.user.profile.role
 
-        if rol == 'admin':
+        if role == 'admin':
             # El admin puede todo, sin más preguntas.
             return True
 
-        if rol == 'agent':
+        if role == 'agent':
             # obj.assigned_agent_id -> el ID del agente asignado al ticket
             # request.user.id        -> el ID del usuario que hace la petición
             #
             # Si son el mismo número, es SU ticket y puede acceder.
             return obj.assigned_agent_id == request.user.id
 
-        if rol == 'customer':
+        if role == 'customer':
             # SAFE_METHODS son los métodos "de solo lectura":
             # ('GET', 'HEAD', 'OPTIONS'). Es decir, el cliente puede
             # mirar su ticket, pero nunca editarlo ni borrarlo.
@@ -61,18 +61,18 @@ class PermissionCommentary(permissions.BasePermission):
         return bool(request.user and request.user.is_authenticated)
 
     def has_object_permission(self, request, view, obj):
-        rol = request.user.profile.rol
+        role = request.user.profile.role
 
         # obj es un Commentary, no un Ticket. Pero un comentario
         # SIEMPRE pertenece a un ticket, así que primero navegamos
         # hasta ese ticket para poder aplicar las mismas reglas.
         ticket = obj.ticket
 
-        if rol == 'admin':
+        if role == 'admin':
             return True
-        if rol == 'agent':
+        if role == 'agent':
             return ticket.assigned_agent_id == request.user.id
-        if rol == 'customer':
+        if role == 'customer':
             return ticket.customer_id == request.user.id
         return False
 
@@ -93,7 +93,7 @@ class PermissionCategory(permissions.BasePermission):
 
         # Cualquier otro método (POST, PUT, PATCH, DELETE) solo lo puede
         # hacer el admin.
-        return request.user.profile.rol == 'admin'
+        return request.user.profile.role == 'admin'
 
 
 # ============================================================

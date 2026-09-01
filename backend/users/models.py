@@ -6,7 +6,7 @@ class Profile(models.Model):
 
     # Roles disponibles para los usuarios.
     # Estructura: NOMBRE = 'valor_en_BD', 'texto_visible'
-    class Rol(models.TextChoices):
+    class Role(models.TextChoices):
         CUSTOMER = 'customer', 'Customer'
         AGENT = 'agent', 'Agent'
         ADMINISTRATOR = 'admin', 'Administrator'
@@ -20,12 +20,12 @@ class Profile(models.Model):
     )
 
     # Rol del usuario. Por defecto será CUSTOMER.
-    rol = models.CharField(
+    role = models.CharField(
         max_length=20,
-        choices=Rol.choices,
-        default=Rol.CUSTOMER
+        choices=Role.choices,
+        default=Role.CUSTOMER
     )
 
     # Representación del perfil: username + rol visible.
     def __str__(self):
-        return f'{self.user.username} ({self.get_rol_display()})'
+        return f'{self.user.username} ({self.get_role_display()})'

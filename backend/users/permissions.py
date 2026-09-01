@@ -6,12 +6,12 @@ class PermissionTicket(permissions.BasePermission):
         return bool(request.user and request.user.is_authenticated)
 
     def has_object_permission(self, request, view, obj):
-        rol = request.user.profile.rol
-        if rol == 'admin':
+        role = request.user.profile.role
+        if role == 'admin':
             return True
-        if rol == 'agent':
+        if role == 'agent':
             return obj.assigned_agent_id == request.user.id
-        if rol == 'customer':
+        if role == 'customer':
             if request.method in permissions.SAFE_METHODS:
                 return obj.customer_id == request.user.id
             return False
@@ -22,13 +22,13 @@ class PermissionCommentary(permissions.BasePermission):
         return bool(request.user and request.user.is_authenticated)
 
     def has_object_permission(self, request, view, obj):
-        rol = request.user.profile.rol
+        role = request.user.profile.role
         ticket = obj.ticket
-        if rol == 'admin':
+        if role == 'admin':
             return True
-        if rol == 'agent':
+        if role == 'agent':
             return ticket.assigned_agent_id == request.user.id
-        if rol == 'customer':
+        if role == 'customer':
             return ticket.customer_id == request.user.id
         return False
 
@@ -39,4 +39,4 @@ class PermissionCategory(permissions.BasePermission):
             return False
         if request.method in permissions.SAFE_METHODS:
             return True
-        return request.user.profile.rol == 'admin'
+        return request.user.profile.role == 'admin'
