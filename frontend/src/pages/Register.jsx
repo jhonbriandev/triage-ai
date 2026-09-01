@@ -1,7 +1,7 @@
 import { useForm } from "react-hook-form";
 import { useNavigate, Link } from "react-router-dom";
 import { useState } from "react";
-import { login } from "../services/auth";
+import { register as registerUser } from "../services/auth";
 
 export default function Register() {
   const {
@@ -12,15 +12,16 @@ export default function Register() {
   const [errorServidor, setErrorServidor] = useState("");
   const navigate = useNavigate();
 
-  const onSubmit = async (datos) => {
+  const onSubmit = async (data) => {
     setErrorServidor("");
     try {
-      await registrar(datos.username, datos.password, datos.email);
+      // Usando el alias para no confundir con el register del form
+      await registerUser(data.username, data.password, data.email);
       navigate("/login");
     } catch (error) {
-      const datosError = error.response?.data;
-      const primerError = datosError ? Object.values(datosError)[0]?.[0] : null;
-      setErrorServidor(primerError || "No se pudo completar el registro.");
+      const dataError = error.response?.data;
+      const firstError = dataError ? Object.values(dataError)[0]?.[0] : null;
+      setErrorServidor(firstError || "No se pudo completar el registro.");
     }
   };
 
@@ -52,6 +53,18 @@ export default function Register() {
           />
           {errors.password && (
             <span className="error">{errors.password.message}</span>
+          )}
+        </div>
+
+        <div className="field">
+          <label htmlFor="email">Email</label>
+          <input
+            id="email"
+            type="email"
+            {...register("email", { required: "El email es obligatorio" })}
+          />
+          {errors.email && (
+            <span className="error">{errors.email.message}</span>
           )}
         </div>
 
