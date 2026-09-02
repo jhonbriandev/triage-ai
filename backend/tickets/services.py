@@ -8,7 +8,7 @@ from google.genai import types, errors
 logger = logging.getLogger(__name__)
 
 
-class ErrorGenerationIA(Exception):
+class ErrorGenerationAI(Exception):
     """Se lanza cuando no se pudo generar una sugerencia de IA, por cualquier motivo:
     falla de red, error de la API, respuesta que no es JSON válido, o JSON incompleto."""
     pass
@@ -30,7 +30,7 @@ Descripción del ticket: {description}
 EXPECTED_FIELDS = {'suggestion_category', 'suggestion_priority', 'generated_summary', 'suggestion_answer'}
 VALID_PRIORITY = {'baja', 'media', 'alta', 'urgente'}
 
-def generate_suggestion_ia(ticket, max_tried = 3):
+def generate_suggestion_ai(ticket, max_tried = 3):
     """
     Llama a la API de Gemini con el título y la descripción del ticket, y
     devuelve un diccionario con las 4 claves que espera el modelo SugerenciaIA.
@@ -72,11 +72,11 @@ def generate_suggestion_ia(ticket, max_tried = 3):
                 continue  # vuelve a intentar
 
             logger.warning('Gemini respondió con un error para el ticket #%s: %s', ticket.pk, exc)
-            raise ErrorGenerationIA(f'La API de Gemini respondió con un error: {exc}') from exc
+            raise ErrorGenerationAI(f'La API de Gemini respondió con un error: {exc}') from exc
  
         except Exception as exc:
             logger.warning('Fallo inesperado llamando a Gemini para el ticket #%s: %s', ticket.pk, exc)
-            raise ErrorGenerationIA(f'No se pudo contactar a la IA: {exc}') from exc
+            raise ErrorGenerationAI(f'No se pudo contactar a la IA: {exc}') from exc
 
     try:
         data = json.loads(response.text)
@@ -85,18 +85,18 @@ def generate_suggestion_ia(ticket, max_tried = 3):
             'La IA no devolvió JSON válido para el ticket #%s. Respuesta cruda: %r',
             ticket.pk, getattr(response, 'text', None),
         )
-        raise ErrorGenerationIA('La IA no devolvió un JSON válido')
+        raise ErrorGenerationAI('La IA no devolvió un JSON válido')
 
     missing = EXPECTED_FIELDS - data.keys()
     if missing:
         logger.warning('La IA omitió campos %s para el ticket #%s', missing, ticket.pk)
-        raise ErrorGenerationIA(f'Faltan campos en la respuesta de la IA: {missing}')
+        raise ErrorGenerationAI(f'Faltan campos en la respuesta de la IA: {missing}')
 
     if data['suggestion_priority'] not in VALID_PRIORITY:
         logger.warning(
             'Prioridad sugerida inválida "%s" para el ticket #%s',
             data['suggestion_priority'], ticket.pk,
         )
-        raise ErrorGenerationIA(f"Prioridad sugerida inválida: {data['suggestion_priority']!r}")
+        raise ErrorGenerationAI(f"Prioridad sugerida inválida: {data['suggestion_priority']!r}")
 
     return data

@@ -1,7 +1,7 @@
 import pytest
 from unittest.mock import patch, MagicMock
 from rest_framework.test import APIClient
-from tickets.services import generate_suggestion_ia, ErrorGenerationIA
+from tickets.services import generate_suggestion_ai, ErrorGenerationAI
 from tickets.tests.factories import UserFactory, CategoryFactory, TicketFactory
 
 
@@ -32,7 +32,7 @@ class TestGenerateSuggestionIA:
                 response_mock(json_valido)
             )
 
-            results = generate_suggestion_ia(ticket)
+            results = generate_suggestion_ai(ticket)
 
         assert results['suggestion_priority'] == 'alta'
 
@@ -45,8 +45,8 @@ class TestGenerateSuggestionIA:
                 Exception('fallo de red')
             )
 
-            with pytest.raises(ErrorGenerationIA):
-                generate_suggestion_ia(ticket)
+            with pytest.raises(ErrorGenerationAI):
+                generate_suggestion_ai(ticket)
 
     def test_invalid_priority_launch_error_generation_ai(self):
         ticket = TicketFactory()
@@ -62,8 +62,8 @@ class TestGenerateSuggestionIA:
                 response_mock(bad_priority)
             )
 
-            with pytest.raises(ErrorGenerationIA):
-                generate_suggestion_ia(ticket)
+            with pytest.raises(ErrorGenerationAI):
+                generate_suggestion_ai(ticket)
 
 
 @pytest.mark.django_db
@@ -95,4 +95,4 @@ class TestCreationTicketWithIA:
             )
 
         assert response.status_code == 201
-        assert response.data['has_suggestion_ia'] is False
+        assert response.data['has_suggestion_ai'] is False

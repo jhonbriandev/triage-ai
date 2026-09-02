@@ -7,7 +7,7 @@ from rest_framework.exceptions import PermissionDenied
 from .models import Category, Ticket, Commentary, SuggestionAi
 from .serializers import CategorySerializer, TicketSerializer, CommentarySerializer
 from .permissions import PermissionCategory, PermissionTicket, PermissionCommentary
-from .services import generate_suggestion_ia, ErrorGenerationIA
+from .services import generate_suggestion_ai, ErrorGenerationAI
 
 logger = logging.getLogger(__name__)
 
@@ -32,9 +32,9 @@ class TicketViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         ticket = serializer.save(customer=self.request.user)
         try:
-            datos_ia = generate_suggestion_ia(ticket)
+            datos_ia = generate_suggestion_ai(ticket)
             SuggestionAi.objects.create(ticket=ticket, **datos_ia)
-        except ErrorGenerationIA as exc:
+        except ErrorGenerationAI as exc:
             logger.error('Ticket #%s creado SIN sugerencia de IA: %s', ticket.pk, exc)
         
     @action(detail=False, methods=['get'])
