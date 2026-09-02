@@ -27,3 +27,8 @@ export async function updateTicket(id, changes) {
   const { data } = await api.patch(`/tickets/${id}/`, changes);
   return data;
 }
+
+export async function getTicketStats() {
+  const { data } = await api.get("/tickets/stats/");
+  return data;
+}

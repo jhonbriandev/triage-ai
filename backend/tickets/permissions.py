@@ -17,7 +17,17 @@ class PermissionTicket(permissions.BasePermission):
         # muy básico: "¿hay alguien identificado haciendo esta
         # petición?". Es como el guardia en la puerta que solo pide
         # tu credencial, sin mirar a qué piso vas.
-        return bool(request.user and request.user.is_authenticated)
+        
+        if not (request.user and request.user.is_authenticated):
+            return False
+
+        # Un agente no puede CREAR tickets (POST), pero sí puede seguir
+        # usando el resto de acciones (listar, ver detalle, actualizar) —
+        # esas se filtran aparte en has_object_permission / get_queryset.
+        if request.method == 'POST' and request.user.profile.role == 'agent':
+            return False
+
+        return True
 
     def has_object_permission(self, request, view, obj):
         # Este segundo método SÍ conoce el objeto concreto (obj = el
@@ -26,7 +36,7 @@ class PermissionTicket(permissions.BasePermission):
         role = request.user.profile.role
 
         if role == 'admin':
-            # El admin puede todo, sin más preguntas.
+            # El admin puede todo
             return True
 
         if role == 'agent':

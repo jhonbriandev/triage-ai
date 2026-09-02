@@ -49,8 +49,13 @@ export default function ListTickets() {
     <div className="page-list">
       <header>
         <h1>Mis tickets</h1>
-        <Link to="/tickets/new">
-          <button>+ Nuevo ticket</button>
+        {role !== "agent" && (
+          <Link to="/tickets/new">
+            <button>+ Nuevo ticket</button>
+          </Link>
+        )}
+        <Link to="/dashboard">
+          <button className="button-secondary">Dashboard</button>
         </Link>
         {role === "admin" && (
           <Link to="/admin/categories">
@@ -72,6 +77,9 @@ export default function ListTickets() {
               <strong>{ticket.title}</strong>
               <span className="label">{ticket.status_display}</span>
               <span className="label">{ticket.priority_display}</span>
+              {ticket.category_name && (
+                <span className="label">{ticket.category_name}</span>
+              )}
               {!ticket.category_name && (
                 <span className="label label--pending">Sin categorizar</span>
               )}

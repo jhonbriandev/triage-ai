@@ -1,4 +1,7 @@
 import logging
+from rest_framework.decorators import action
+from rest_framework.response import Response
+from django.db.models import Count
 from rest_framework import viewsets
 from rest_framework.exceptions import PermissionDenied
 from .models import Category, Ticket, Commentary, SuggestionAi
@@ -34,6 +37,17 @@ class TicketViewSet(viewsets.ModelViewSet):
         except ErrorGenerationIA as exc:
             logger.error('Ticket #%s creado SIN sugerencia de IA: %s', ticket.pk, exc)
         
+    @action(detail=False, methods=['get'])
+    def stats(self, request):
+        queryset = self.get_queryset()
+        counts = queryset.values('status').annotate(total=Count('id'))
+
+        result = {value: 0 for value, _ in Ticket.Status.choices}
+        for row in counts:
+            result[row['status']] = row['total']
+
+        return Response(result)
+    
 class CommentaryViewSet(viewsets.ModelViewSet):
     serializer_class = CommentarySerializer
     permission_classes = [PermissionCommentary] 

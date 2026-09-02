@@ -6,6 +6,7 @@ import CreateTicket from "./pages/CreateTicket";
 import DetailTicket from "./pages/DetailTicket";
 import PrivateRoute from "./components/PrivateRoute";
 import ManageCategories from "./pages/ManageCategories";
+import Dashboard from "./pages/Dashboard";
 import "./App.css";
 
 function App() {
@@ -24,7 +25,7 @@ function App() {
       <Route
         path="/tickets/new"
         element={
-          <PrivateRoute>
+          <PrivateRoute permittedRoles={["customer", "admin"]}>
             <CreateTicket />
           </PrivateRoute>
         }
@@ -42,6 +43,14 @@ function App() {
         element={
           <PrivateRoute permittedRoles={["admin"]}>
             <ManageCategories />
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/dashboard"
+        element={
+          <PrivateRoute>
+            <Dashboard />
           </PrivateRoute>
         }
       />
