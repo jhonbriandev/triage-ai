@@ -25,11 +25,13 @@ export default function Dashboard() {
   const total = Object.values(stats).reduce((sum, n) => sum + n, 0);
 
   return (
-    <div className="page-dashboard">
-      <Link to="/tickets">&larr; Back to my tickets</Link>
+    <div className="page-form">
+      <Link to="/tickets" className="back-link">
+        &larr; Volver a mis tickets
+      </Link>
       <h1>Dashboard</h1>
       <p className="help">
-        {total} ticket{total !== 1 ? "s" : ""} in total, in your scope.
+        {total} ticket{total !== 1 ? "s" : ""} en total, a tu alcance.
       </p>
 
       <div className="stats-grid">

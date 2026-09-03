@@ -95,7 +95,9 @@ export default function DetailTicket() {
 
   return (
     <div className="page-detail">
-      <Link to="/tickets">&larr; Volver a mis tickets</Link>
+      <Link to="/tickets" className="back-link">
+        &larr; Volver a mis tickets
+      </Link>
 
       <h1>{ticket.title}</h1>
       <div className="labels">
@@ -179,7 +181,7 @@ export default function DetailTicket() {
           </p>
           <div className="ai-actions">
             <button type="button" onClick={useSuggestedValues}>
-              Usar estos valores en "Gestionar ticket"
+              Usar valores sugeridos en "Gestionar ticket"
             </button>
             <button type="button" onClick={useSuggestionAnswer}>
               Usar esta respuesta como comentario

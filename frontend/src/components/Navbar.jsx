@@ -22,9 +22,9 @@ export default function Navbar() {
 
   return (
     <nav className="navbar">
-      <Link to="/tickets" className="navbar-brand">
+      <a href="/tickets" className="navbar-brand">
         🎫 Triage IA
-      </Link>
+      </a>
 
       <div className="navbar-links">
         <Link to="/tickets">Tickets</Link>

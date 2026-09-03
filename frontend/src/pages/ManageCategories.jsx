@@ -54,7 +54,9 @@ export default function ManageCategories() {
 
   return (
     <div className="page-form">
-      <Link to="/tickets">&larr; Volver a mis tickets</Link>
+      <Link to="/tickets" className="back-link">
+        &larr; Volver a mis tickets
+      </Link>
       <h1>Gestionar categorías</h1>
       <p className="help">
         Solo un administrador puede crear, editar o borrar categorías.

@@ -78,7 +78,9 @@ export default function CreateTicket() {
 
   return (
     <div className="page-form">
-      <Link to="/tickets">&larr; Volver a mis tickets</Link>
+      <Link to="/tickets" className="back-link">
+        &larr; Volver a mis tickets
+      </Link>
       <form onSubmit={handleSubmit(onSubmit)}>
         <h1>Nuevo ticket</h1>
 
