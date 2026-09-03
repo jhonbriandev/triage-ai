@@ -36,10 +36,14 @@ export default function Dashboard() {
 
       <div className="stats-grid">
         {Object.entries(STATUS_LABELS).map(([key, label]) => (
-          <div key={key} className={`stat-card stat-card--${key}`}>
+          <Link
+            key={key}
+            to={`/tickets?status=${key}`}
+            className={`stat-card stat-card--${key} stat-card-link`}
+          >
             <span className="stat-number">{stats[key] ?? 0}</span>
             <span className="stat-label">{label}</span>
-          </div>
+          </Link>
         ))}
       </div>
     </div>

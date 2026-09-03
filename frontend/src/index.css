@@ -302,6 +302,11 @@ ul {
   color: #6b7280;
 }
 
+.stat-card-link {
+  text-decoration: none;
+  color: inherit; /* usa el color de texto normal, no el azul de link */
+}
+
 /* === Paleta de colores como variables ===
    Una variable CSS es como un bote de pintura ya mezclado con una
    etiqueta: en vez de mezclar el mismo color cada vez que lo necesitan,

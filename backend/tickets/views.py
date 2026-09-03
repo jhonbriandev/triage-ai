@@ -23,11 +23,44 @@ class TicketViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         user = self.request.user
         role = user.profile.role
+
+        # --------------------------------------------------------
+        # BLOQUE 1: filtro base según el rol del usuario
+        # --------------------------------------------------------
+        # Cada rol ve un subconjunto distinto de tickets:
+        # - admin: todos los tickets del sistema
+        # - agent: solo los tickets que tiene asignados
+        # - customer: solo los tickets que él mismo creó
+        # Nota: ya NO usamos "return" aquí dentro. Antes cada rama
+        # entregaba el resultado de inmediato y cortaba la función;
+        # ahora solo lo guardamos en "queryset" para poder seguir
+        # afinándolo en el Bloque 2 antes de entregarlo.
         if role == 'admin':
-            return Ticket.objects.all()
-        if role == 'agent':
-            return Ticket.objects.filter(assigned_agent = user)
-        return Ticket.objects.filter(customer = user)
+            queryset = Ticket.objects.all()
+        elif role == 'agent':
+            queryset = Ticket.objects.filter(assigned_agent=user)
+        else:
+            queryset = Ticket.objects.filter(customer=user)
+
+        # --------------------------------------------------------
+        # BLOQUE 2: filtro opcional por estado (?status=abierto)
+        # --------------------------------------------------------
+        # query_params.get('status') lee el parámetro que llega en la
+        # URL de la petición (ej. /tickets/?status=abierto). Si no viene
+        # ese parámetro, devuelve None y el "if" no se ejecuta, dejando
+        # el queryset intacto (mismo comportamiento que antes).
+        # Si SÍ viene, filtramos el queryset ya calculado en el Bloque 1,
+        # así el filtro por estado se aplica sin importar el rol.
+        status = self.request.query_params.get('status')
+        if status:
+            queryset = queryset.filter(status=status)
+
+        # --------------------------------------------------------
+        # BLOQUE 3: entrega final
+        # --------------------------------------------------------
+        # Un solo punto de salida, ya con ambos filtros aplicados
+        # (rol + estado, si corresponde).
+        return queryset
     
     def perform_create(self, serializer):
         ticket = serializer.save(customer=self.request.user)
