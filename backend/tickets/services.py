@@ -48,7 +48,7 @@ def generate_suggestion_ai(ticket, max_tried = 3):
         try:
             client = genai.Client(
                 api_key=settings.GEMINI_API_KEY,
-                http_options=types.HttpOptions(timeout=15000),  # 15 segundos, en milisegundos
+                http_options=types.HttpOptions(timeout=25000),  # 25 segundos, en milisegundos
             )
             response = client.models.generate_content(
                 model='gemini-3.6-flash',
@@ -59,7 +59,8 @@ def generate_suggestion_ai(ticket, max_tried = 3):
             )
             break # si llegó aquí, sí funcionó — salimos del bucle de reintentos
         except errors.APIError as exc:
-            is_temporal = getattr(exc, 'code', None) in (503, 429)
+            RETRYABLE_STATUS_CODES = (429, 503, 504)
+            is_temporal = getattr(exc, 'code', None) in RETRYABLE_STATUS_CODES
             # 503 = sobrecarga, 429 = demasiadas peticiones — ambos son "inténtalo después"
 
             if is_temporal and tried < max_tried - 1:

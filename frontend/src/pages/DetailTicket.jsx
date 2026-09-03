@@ -3,18 +3,18 @@ import { useParams, Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { getTicket, updateTicket } from "../services/tickets";
 import { toListCommentaries, createCommentary } from "../services/commentaries";
-import { getActualRole } from "../services/auth";
 import { toListCategories } from "../services/categories";
+import { useAuth } from "../context/AuthContext";
 
 export default function DetailTicket() {
   const { id } = useParams();
-  const role = getActualRole();
+  const { user } = useAuth();
   const [ticket, setTicket] = useState(null);
   const [commentaries, setCommentaries] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const canManage = role === "agent" || role === "admin";
+  const canManage = user?.role === "agent" || user?.role === "admin";
 
   const {
     register,

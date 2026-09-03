@@ -37,7 +37,8 @@ export default function CreateTicket() {
   //             cayó, el token expiró, etc.). Por eso es un estado
   //             separado: son dos tipos de error con causas distintas.
   const [errorServidor, setErrorServidor] = useState("");
-
+  // Utilizado para activar o desactivar el boton mientras se crea un ticket
+  const [creating, setCreating] = useState(false);
   const navigate = useNavigate();
 
   // --------------------------------------------------------
@@ -57,6 +58,7 @@ export default function CreateTicket() {
   // es porque title, description y category pasaron sus reglas).
   const onSubmit = async (datos) => {
     setErrorServidor(""); // limpiamos cualquier error previo antes de reintentar
+    setCreating(true); // activamos el aviso ANTES de mandar la petición
     try {
       const ticket = await createTicket(datos);
       // Si el ticket se creó bien, navegamos directo a su detalle.
@@ -69,6 +71,8 @@ export default function CreateTicket() {
       setErrorServidor(
         "No se pudo crear el ticket. Revisa los datos e intenta de nuevo.",
       );
+    } finally {
+      setCreating(false); // se desactiva pase lo que pase, incluso si hubo error
     }
   };
 
@@ -113,7 +117,20 @@ export default function CreateTicket() {
         </div>
 
         {errorServidor && <p className="error">{errorServidor}</p>}
-        <button type="submit">Crear ticket</button>
+
+        {/*Se entiende que el usestate inicia a creating como false
+          Posteriormente en la parte de arriba en el await, se vuelve true al hacer la peticion
+          de creacion de ticket, y al final si falla o es exitoso, volvera a false
+          Eso en UI se interpreta asi:
+          El boton desactivado es cuando creating es True
+          y mostrara el aviso "creando"
+          mientras que cuando es false, como al inicio
+          mostrara "crear ticket" */}
+        <button disabled={creating}>
+          {creating
+            ? "Creando ticket, esto puede tardar unos segundos..."
+            : "Crear ticket"}{" "}
+        </button>
       </form>
     </div>
   );

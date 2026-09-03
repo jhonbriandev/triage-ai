@@ -1,7 +1,8 @@
 import { useForm } from "react-hook-form";
 import { useNavigate, Link } from "react-router-dom";
 import { useState } from "react";
-import { login } from "../services/auth";
+import { login as loginService } from "../services/auth";
+import { useAuth } from "../context/AuthContext";
 
 export default function Login() {
   // react-hook-form nos da 3 herramientas:
@@ -16,11 +17,13 @@ export default function Login() {
 
   const [errorServidor, setErrorServidor] = useState(""); // error que viene del backend (no de validación de formulario)
   const navigate = useNavigate();
+  const { refreshUser } = useAuth();
 
   const onSubmit = async (data) => {
     setErrorServidor(""); // limpiamos error previo antes de intentar de nuevo
     try {
-      await login(data.username, data.password); // guarda los tokens si todo sale bien
+      await loginService(data.username, data.password); // guarda los tokens si todo sale bien
+      refreshUser(); // avisa al Context: "ya hay usuario logueado"
       navigate("/tickets"); // redirige a la lista de tickets
     } catch (error) {
       // Aquí NO diferenciamos si fue usuario incorrecto, contraseña incorrecta,

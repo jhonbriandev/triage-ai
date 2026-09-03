@@ -1,17 +1,14 @@
 import { useEffect, useState } from "react";
 import { toListTickets } from "../services/tickets";
-import { getActualRole, getUsername, logout } from "../services/auth";
 import { Link } from "react-router-dom";
-import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 export default function ListTickets() {
   // Tres estados típicos para cualquier pantalla que carga datos de una API:
   const [tickets, setTickets] = useState([]); // los datos en sí
   const [loading, setLoading] = useState(true); // ¿todavía estamos esperando la respuesta?
   const [error, setError] = useState(""); // mensaje de error, si algo falló
-  const navigate = useNavigate();
-  const role = getActualRole();
-  const username = getUsername();
+  const { user } = useAuth();
 
   useEffect(() => {
     // Función async interna (ver explicación arriba): useEffect no
@@ -20,6 +17,7 @@ export default function ListTickets() {
     async function loadTickets() {
       try {
         const data = await toListTickets();
+        // Pasamos los valores de toListTickets a setTickets
         setTickets(data);
       } catch {
         setError("No se pudieron cargar los tickets.");
@@ -33,36 +31,19 @@ export default function ListTickets() {
     loadTickets();
   }, []); // [] = "ejecuta esto solo una vez, cuando el componente aparece en pantalla"
 
-  const exit = () => {
-    logout(); // borra los tokens del localStorage
-    navigate("/login"); // redirige al login (sin recargar toda la página)
-  };
-
   // Mientras carga, no mostramos nada más que este mensaje
   if (loading) return <p>Cargando tickets...</p>;
 
   // Para depurar, para saber el rol y el usuario
   // Previamente agregada la funcion en la view de Django
-  console.log("rol actual:", role);
-  console.log("usuario completo:", username);
+  // console.log("rol actual:", role);
+  // console.log("usuario completo:", username);
   return (
     <div className="page-list">
       <header>
         <h1>Mis tickets</h1>
-        {role !== "agent" && (
-          <Link to="/tickets/new">
-            <button>+ Nuevo ticket</button>
-          </Link>
-        )}
-        <Link to="/dashboard">
-          <button className="button-secondary">Dashboard</button>
-        </Link>
-        {role === "admin" && (
-          <Link to="/admin/categories">
-            <button className="button-secondary">Categorías</button>
-          </Link>
-        )}
-        <button onClick={exit}>Cerrar sesión</button>
+        {/* El botón "Cerrar sesión" y su función exit() ya no van aquí:
+            ahora viven en el Navbar, visible en toda la app. */}
       </header>
 
       {error && <p className="error">{error}</p>}
@@ -72,16 +53,27 @@ export default function ListTickets() {
         {tickets.map((ticket) => (
           // "key" es obligatorio en listas de React: le ayuda a identificar
           // qué elemento cambió, sin tener que redibujar toda la lista.
-          <li key={ticket.id} className={`ticket ticket--${ticket.priority}`}>
+          <li key={ticket.id} className="ticket">
             <Link to={`/tickets/${ticket.id}`}>
               <strong>{ticket.title}</strong>
-              <span className="label">{ticket.status_display}</span>
-              <span className="label">{ticket.priority_display}</span>
-              {ticket.category_name && (
-                <span className="label">{ticket.category_name}</span>
-              )}
-              {!ticket.category_name && (
-                <span className="label label--pending">Sin categorizar</span>
+
+              <span className={`label label--status-${ticket.status}`}>
+                {ticket.status_display}
+              </span>
+
+              <span className={`label label--priority-${ticket.priority}`}>
+                {ticket.priority_display}
+              </span>
+
+              <span
+                className={`label ${!ticket.category_name ? "label--pending" : ""}`}
+              >
+                {ticket.category_name ?? "Sin categorizar"}
+              </span>
+              {(user?.role === "admin" || user?.role === "agent") && (
+                <span className="label label--owner">
+                  👤 {ticket.customer_username}
+                </span>
               )}
             </Link>
           </li>

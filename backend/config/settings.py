@@ -16,6 +16,7 @@ from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+print(f"🔍 Buscando .env en: {BASE_DIR / '.env'}")
 
 # Para tests con pytest
 RUN_TESTS = 'pytest' in sys.modules
@@ -32,7 +33,7 @@ SECRET_KEY = env('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env.bool('DEBUG', default=False)
-
+print(f"🔍 DEBUG está en: {DEBUG}")
 ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=['localhost', '127.0.0.1'])
 
 

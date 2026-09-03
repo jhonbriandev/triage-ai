@@ -202,3 +202,143 @@ ul {
 .stat-card--closed {
   border-top: 4px solid #6b7280;
 }
+
+/* === Paleta de colores como variables ===
+   Una variable CSS es como un bote de pintura ya mezclado con una
+   etiqueta: en vez de mezclar el mismo color cada vez que lo necesitan,
+   lo mezclan una vez aquí arriba y lo reutilizan con var(--nombre). Si
+   más adelante quieren cambiar el tono de "urgente" en todo el sitio,
+   se cambia en un solo lugar. */
+:root {
+  --color-priority-baja: #16a34a;
+  --color-priority-media: #f59e0b;
+  --color-priority-alta: #ea580c;
+  --color-priority-urgente: #dc2626;
+
+  --color-status-abierto: #2563eb;
+  --color-status-en_progreso: #f59e0b;
+  --color-status-resuelto: #16a34a;
+  --color-status-cerrado: #6b7280;
+
+  --color-role-customer: #2563eb;
+  --color-role-agent: #7c3aed;
+  --color-role-admin: #dc2626;
+}
+
+/* === Layout general: navbar arriba, contenido al medio, footer abajo === */
+.app-shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+.app-main {
+  flex: 1;
+}
+.navbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+  padding: 1rem 1.5rem;
+  background: white;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+}
+.navbar-brand {
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: #1a1a1a;
+  text-decoration: none;
+}
+.navbar-links {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.navbar-links a {
+  color: #444;
+  text-decoration: none;
+  font-size: 0.95rem;
+}
+.navbar-links a:hover {
+  color: #2563eb;
+}
+.navbar-user {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+.navbar-username {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+.role-badge {
+  font-size: 0.7rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  color: white;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+.role-badge--customer {
+  background: var(--color-role-customer);
+}
+.role-badge--agent {
+  background: var(--color-role-agent);
+}
+.role-badge--admin {
+  background: var(--color-role-admin);
+}
+.footer {
+  text-align: center;
+  padding: 1.5rem;
+  color: #888;
+  font-size: 0.85rem;
+}
+.label--priority-baja {
+  background: var(--color-priority-baja);
+  color: white;
+}
+.label--priority-media {
+  background: var(--color-priority-media);
+  color: white;
+}
+.label--priority-alta {
+  background: var(--color-priority-alta);
+  color: white;
+}
+.label--priority-urgente {
+  background: var(--color-priority-urgente);
+  color: white;
+  font-weight: 700;
+}
+.label--status-abierto {
+  background: var(--color-status-abierto);
+  color: white;
+}
+.label--status-en_progreso {
+  background: var(--color-status-en_progreso);
+  color: white;
+}
+.label--status-resuelto {
+  background: var(--color-status-resuelto);
+  color: white;
+}
+.label--status-cerrado {
+  background: var(--color-status-cerrado);
+  color: #f0f0f0;
+}
+.label--owner {
+  background: #eef2ff;
+  color: #3730a3;
+}
+.ticket {
+  transition:
+    box-shadow 0.15s ease,
+    transform 0.15s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+.ticket:hover {
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.1);
+  transform: translateY(-1px);
+}
