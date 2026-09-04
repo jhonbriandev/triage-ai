@@ -25,6 +25,7 @@ class Ticket(models.Model):
         URGENTE = 'urgente', 'Urgente'
 
     customer = models.ForeignKey(User,on_delete=models.PROTECT, related_name='created_tickets')
+    # No es protect, por lo cual si se borra un agente asignado el ticket no se borrara
     assigned_agent = models.ForeignKey(User,on_delete=models.SET_NULL, null=True, blank=True, related_name='assigned_tickets')
     category = models.ForeignKey(Category,on_delete=models.PROTECT, null=True, blank=True, related_name='tickets')
     title = models.CharField(max_length= 200)

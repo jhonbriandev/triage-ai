@@ -38,3 +38,25 @@ export async function getTicketStats() {
   const { data } = await api.get("/tickets/stats/");
   return data;
 }
+
+// --------------------------------------------
+// listAgents: trae la lista de agentes disponibles
+// (el backend ya restringe esto a solo admin; aquí solo
+// hacemos la petición, no hace falta validar el rol aquí)
+// --------------------------------------------
+export async function listAgents() {
+  const { data } = await api.get("/tickets/agents/");
+  return data;
+}
+
+// --------------------------------------------
+// assignTicket: asigna (o quita) un agente de un ticket puntual
+// --------------------------------------------
+export async function assignTicket(id, agentId) {
+  // Apunta a la acción especial /assign/ del backend, NO al
+  // endpoint general de update (por eso no reusamos updateTicket).
+  const { data } = await api.patch(`/tickets/${id}/assign/`, {
+    assigned_agent: agentId,
+  });
+  return data;
+}

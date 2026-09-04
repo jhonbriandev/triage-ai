@@ -105,6 +105,9 @@ class PermissionCategory(permissions.BasePermission):
         # hacer el admin.
         return request.user.profile.role == 'admin'
 
+class PermissionAssignTicket(permissions.BasePermission):
+    def has_permission(self, request, view):
+        return request.user.profile.role == 'admin'
 
 # ============================================================
 # 🧠 GUÍA RÁPIDA DE CONCEPTOS USADOS EN ESTE ARCHIVO

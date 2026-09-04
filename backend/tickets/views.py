@@ -5,11 +5,13 @@ from django.db.models import Count
 from rest_framework import viewsets
 from rest_framework.exceptions import PermissionDenied
 from .models import Category, Ticket, Commentary, SuggestionAi
-from .serializers import CategorySerializer, TicketSerializer, CommentarySerializer
-from .permissions import PermissionCategory, PermissionTicket, PermissionCommentary
+from .serializers import CategorySerializer, TicketSerializer, CommentarySerializer, AgentSerializer
+from .permissions import PermissionCategory, PermissionTicket, PermissionCommentary, PermissionAssignTicket
 from .services import generate_suggestion_ai, ErrorGenerationAI
+from django.contrib.auth import get_user_model
 
 logger = logging.getLogger(__name__)
+User = get_user_model()
 
 class CategoryViewSet(viewsets.ModelViewSet):
     queryset = Category.objects.all()
@@ -80,6 +82,44 @@ class TicketViewSet(viewsets.ModelViewSet):
             result[row['status']] = row['total']
 
         return Response(result)
+    
+    @action(detail=False, methods=['get'], permission_classes=[PermissionAssignTicket])
+    def agents(self, request):
+        # detail=False -> no necesita un ID de ticket en la URL.
+        # Esto crea automáticamente la ruta GET /tickets/agents/
+        # (mismo patrón que ya usas en tu action "stats").
+        #
+        # Solo el admin puede llamar esto: reutilizamos
+        # PermissionAssignTicket porque si solo el admin puede
+        # ASIGNAR, tiene sentido que solo el admin pueda VER
+        # esta lista (un agente no necesita saber quiénes son
+        # sus compañeros).
+        agentes = User.objects.filter(profile__role='agent')
+        return Response(AgentSerializer(agentes, many=True).data)
+
+    @action(detail=True, methods=['patch'], permission_classes=[PermissionAssignTicket])
+
+    def assign(self, request, pk=None):
+        ticket = self.get_object()
+        agent_id = request.data.get('assigned_agent')
+
+        try:
+            # Validamos que el ID recibido sea realmente un agente,
+            # no cualquier usuario (ej. un cliente por error).
+            # profile__role='agent' -> filtra dentro de la tabla
+            # Profile relacionada, no en User directamente.
+            agent = User.objects.get(id=agent_id, profile__role='agent')
+        except User.DoesNotExist:
+            return Response(
+                {"error": "El usuario indicado no existe o no es un agente."},
+                status=400
+            )
+
+        ticket.assigned_agent = agent
+        ticket.save()
+        return Response(TicketSerializer(ticket).data)
+    
+    
     
 class CommentaryViewSet(viewsets.ModelViewSet):
     serializer_class = CommentarySerializer

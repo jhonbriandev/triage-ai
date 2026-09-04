@@ -1,7 +1,12 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
-import { getTicket, updateTicket } from "../services/tickets";
+import {
+  getTicket,
+  updateTicket,
+  listAgents,
+  assignTicket,
+} from "../services/tickets";
 import { toListCommentaries, createCommentary } from "../services/commentaries";
 import { toListCategories } from "../services/categories";
 import { useAuth } from "../context/AuthContext";
@@ -14,7 +19,12 @@ export default function DetailTicket() {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [agents, setAgents] = useState([]);
   const canManage = user?.role === "agent" || user?.role === "admin";
+  // La asignación es SOLO para admin (distinto de "canManage", que
+  // también incluye al agente). Un agente puede gestionar su ticket
+  // pero no reasignarlo a otro compañero.
+  const canAssign = user?.role === "admin";
 
   const {
     register,
@@ -46,6 +56,15 @@ export default function DetailTicket() {
         manageForm.setValue("status", dataTicket.status);
         manageForm.setValue("priority", dataTicket.priority);
         manageForm.setValue("category", dataTicket.category ?? "");
+      }
+      // Solo el admin necesita la lista de agentes y el valor actual
+      // precargado en el formulario (los demás roles ni ven este campo).
+      if (canAssign) {
+        const dataAgents = await listAgents();
+        setAgents(dataAgents);
+        // Precargamos con el agente YA asignado (o "" si no hay ninguno),
+        // mismo patrón que ya usas para status/priority/category.
+        manageForm.setValue("assigned_agent", dataTicket.assigned_agent ?? "");
       }
     } catch {
       setError("No se pudo cargar este ticket (¿existe y es tuyo?).");
@@ -87,6 +106,27 @@ export default function DetailTicket() {
       priority: data.priority,
       category: data.category || null,
     });
+
+    // El agente se guarda con una llamada aparte, porque el backend
+    // lo valida en un endpoint dedicado (/assign/), distinto del PATCH
+    // general de tickets — pero desde la UI se siente como un solo
+    // "Guardar cambios", ya que ambas llamadas ocurren en este mismo
+    // submit, antes de que el usuario vea cualquier resultado.
+    let finalTicket = updated;
+    if (canAssign) {
+      finalTicket = await assignTicket(id, data.assigned_agent || null);
+    }
+
+    setTicket({ ...finalTicket, suggestion_ai: ticket.suggestion_ai });
+  };
+
+  // Se ejecuta apenas cambia el <select>, sin esperar a un botón
+  // "Guardar" aparte -- así la asignación se siente inmediata.
+  const handleAssign = async (e) => {
+    const agentId = e.target.value || null; // "" -> null (sin asignar)
+    const updated = await assignTicket(id, agentId);
+    // Conservamos suggestion_ai porque el PATCH de /assign/ no lo devuelve
+    // (mismo patrón que ya usas en onManageSubmit).
     setTicket({ ...updated, suggestion_ai: ticket.suggestion_ai });
   };
 
@@ -154,6 +194,22 @@ export default function DetailTicket() {
                 ))}
               </select>
             </div>
+            {canAssign && (
+              <div className="field">
+                <label>Agente asignado</label>
+                {/* {...manageForm.register(...)} conecta este <select> al mismo
+        formulario que status/priority/category -- ya no dispara nada
+        por sí solo, solo guarda su valor hasta que se haga submit. */}
+                <select {...manageForm.register("assigned_agent")}>
+                  <option value="">Sin asignar</option>
+                  {agents.map((a) => (
+                    <option key={a.id} value={a.id}>
+                      {a.username}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
             <button type="submit">Guardar cambios</button>
           </form>
         </div>

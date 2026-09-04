@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from .models import Category, Ticket, Commentary, SuggestionAi
-
+from django.contrib.auth import get_user_model
 
 # ============================================================
 # CATEGORY
@@ -156,6 +156,8 @@ class TicketSerializer(serializers.ModelSerializer):
             'created_at',
             'has_suggestion_ai',
             'customer',
+            'assigned_agent',
+            'assigned_agent_username',
             
         ]
     def get_has_suggestion_ai(self, obj):
@@ -175,6 +177,29 @@ class TicketSerializer(serializers.ModelSerializer):
             return SuggestionAiSerializer(obj.suggestion_ai).data
         return None
     
+
+# get_user_model() devuelve el modelo de usuario que Django está usando
+# en este proyecto. Se usa esto en vez de "import User directo" porque
+# es la forma recomendada por Django: si en el futuro cambias de modelo
+# de usuario, este código sigue funcionando sin tocarlo.
+User = get_user_model()
+
+# ============================================================
+# AGENT (lista simple para el selector de asignación del admin)
+# ============================================================
+
+class AgentSerializer(serializers.ModelSerializer):
+    """
+    El admin solo necesita ver id + username de cada agente para
+    poder elegir a quién asignar un ticket. Por eso NO reusamos
+    un serializer de User completo (que podría exponer email,
+    permisos, etc.) — este es minimalista a propósito.
+    """
+    class Meta:
+        model = User
+        fields = ['id', 'username']  # lo mínimo necesario para el <select>
+        
+        
 # ============================================================
 # SUGGESTION AI
 # ============================================================
