@@ -8,6 +8,9 @@ router.register('commentaries', CommentaryViewSet, basename = 'comentario')
  
 urlpatterns = router.urls
 
-# GET	/api/tickets/	listar
-# POST	/api/tickets/	crear
+# basename sirve para que el router nombre las rutas de tu ViewSet 
+# (comentarios-list, comentarios-detail), especialmente cuando no hay queryset.
+# Es equivalente a "comentario-detail" → "/comentarios/<pk>/"
+# Esos nombres se usan para resolver/referenciar URLs (por ejemplo con reverse() o serializers),
+# aunque normalmente DRF lo hace automáticamente.
 
