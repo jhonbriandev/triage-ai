@@ -94,15 +94,23 @@ class TicketViewSet(viewsets.ModelViewSet):
         # ASIGNAR, tiene sentido que solo el admin pueda VER
         # esta lista (un agente no necesita saber quiénes son
         # sus compañeros).
-        agentes = User.objects.filter(profile__role='agent')
-        return Response(AgentSerializer(agentes, many=True).data)
+        agents = User.objects.filter(profile__role='agent')
+        return Response(AgentSerializer(agents, many=True).data)
 
     @action(detail=True, methods=['patch'], permission_classes=[PermissionAssignTicket])
 
     def assign(self, request, pk=None):
         ticket = self.get_object()
         agent_id = request.data.get('assigned_agent')
-
+        
+        # Antes: cualquier valor vacío caía directo al User.objects.get()
+        # y fallaba. Ahora lo manejamos como un caso válido aparte:
+        # "sin agente" es una asignación legítima, no un error.
+        if agent_id in (None, "", "null"):
+            ticket.assigned_agent = None
+            ticket.save()
+            return Response(TicketSerializer(ticket).data)
+        
         try:
             # Validamos que el ID recibido sea realmente un agente,
             # no cualquier usuario (ej. un cliente por error).
