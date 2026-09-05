@@ -101,23 +101,30 @@ export default function DetailTicket() {
   };
 
   const onManageSubmit = async (data) => {
-    const updated = await updateTicket(id, {
-      status: data.status,
-      priority: data.priority,
-      category: data.category || null,
-    });
+    try {
+      const updated = await updateTicket(id, {
+        status: data.status,
+        priority: data.priority,
+        category: data.category || null,
+      });
 
-    // El agente se guarda con una llamada aparte, porque el backend
-    // lo valida en un endpoint dedicado (/assign/), distinto del PATCH
-    // general de tickets — pero desde la UI se siente como un solo
-    // "Guardar cambios", ya que ambas llamadas ocurren en este mismo
-    // submit, antes de que el usuario vea cualquier resultado.
-    let finalTicket = updated;
-    if (canAssign) {
-      finalTicket = await assignTicket(id, data.assigned_agent || null);
+      // El agente se guarda con una llamada aparte, porque el backend
+      // lo valida en un endpoint dedicado (/assign/), distinto del PATCH
+      // general de tickets — pero desde la UI se siente como un solo
+      // "Guardar cambios", ya que ambas llamadas ocurren en este mismo
+      // submit, antes de que el usuario vea cualquier resultado.
+      let finalTicket = updated;
+      if (canAssign) {
+        finalTicket = await assignTicket(id, data.assigned_agent || null);
+      }
+
+      setTicket({ ...finalTicket, suggestion_ai: ticket.suggestion_ai });
+    } catch {
+      // Antes, si algo fallaba a mitad de camino, no pasaba NADA visible
+      // en pantalla -- ahora al menos el usuario se entera de que algo
+      // salió mal, en vez de pensar que "no se guardó" sin explicación.
+      setError("No se pudieron guardar los cambios. Intenta de nuevo.");
     }
-
-    setTicket({ ...finalTicket, suggestion_ai: ticket.suggestion_ai });
   };
 
   // Se ejecuta apenas cambia el <select>, sin esperar a un botón

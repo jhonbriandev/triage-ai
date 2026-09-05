@@ -75,12 +75,29 @@ class TicketViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'])
     def stats(self, request):
         queryset = self.get_queryset()
+        
+        # Conteo por ESTADO PARA DASHBOARD
         counts = queryset.values('status').annotate(total=Count('id'))
 
         result = {value: 0 for value, _ in Ticket.Status.choices}
         for row in counts:
             result[row['status']] = row['total']
 
+        # Conteo por PRIORIDAD PARA DASHBOARD
+        # Misma lógica que arriba pero agrupando por 'priority' en vez de 'status'.
+        # values('priority') le dice a Django "agrupa las filas por este campo",
+        # y annotate(total=Count('id')) cuenta cuántos tickets caen en cada grupo.
+        counts_priority = queryset.values('priority').annotate(total=Count('id'))
+        priority_result = {value: 0 for value, _ in Ticket.Priority.choices}
+        for row in counts_priority:
+            priority_result[row['priority']] = row['total']
+
+        # Lo metemos como una clave nueva "priority" dentro del mismo dict.
+        # Así el frontend que ya lee result['abierto'], result['cerrado'], etc.
+        # sigue funcionando exactamente igual, y el pie chart solo necesita
+        # leer result['priority'].
+        result['priority'] = priority_result
+        
         return Response(result)
     
     @action(detail=False, methods=['get'], permission_classes=[PermissionAssignTicket])

@@ -500,3 +500,14 @@ ul {
   cursor: not-allowed;
   transform: none;
 }
+
+/* Envoltorio para el pie chart, mismo estilo de "tarjeta blanca"
+   que ya usan .stat-card y los formularios, para que el gráfico no
+   se sienta como un elemento suelto en la página. */
+.chart-card {
+  background: white;
+  border-radius: 12px;
+  padding: 1.25rem;
+  margin-top: 1rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
