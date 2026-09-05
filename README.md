@@ -1,3 +1,5 @@
+[![Tests](https://github.com/jhonbriandev/triage-ai/actions/workflows/tests.yml/badge.svg)](https://github.com/jhonbriandev/triage-ai/actions/workflows/tests.yml)
+
 # Triage IA
 
 Sistema de soporte técnico que usa IA (Google Gemini) para clasificar automáticamente cada ticket que un cliente reporta — categoría, prioridad, un resumen y una respuesta inicial sugerida — para que el agente que lo atienda ya llegue con contexto, en vez de partir de cero.
@@ -34,6 +36,8 @@ Infraestructura: Railway (backend + base de datos) · Vercel (frontend)
 
 Cuando un cliente crea un ticket, el backend responde de inmediato con el ticket ya creado y, en la misma petición, llama a Gemini para generar una sugerencia de clasificación. Si la IA falla por cualquier motivo (sin conexión, límite de peticiones, respuesta inválida), el ticket se conserva igual — la sugerencia simplemente queda pendiente, y un agente puede clasificarlo a mano.
 
+![Arquitectura del sistema](docs/architecture.svg)
+
 ## Funcionalidades principales
 
 - **3 roles con permisos diferenciados:** cliente (crea tickets, ve y comenta solo los suyos), agente (ve y gestiona los que tiene asignados), admin (ve todo, gestiona categorías).
@@ -52,6 +56,7 @@ Algunas elecciones de diseño que vale la pena explicar, no solo mostrar:
 - **Los campos de la sugerencia de IA son texto libre, no relaciones ni listas cerradas.** Lo que devuelve un modelo de lenguaje no es 100% predecible; forzarlo a encajar en una lista rígida podría romper la app si la IA responde algo ligeramente distinto a lo esperado. Se guarda tal cual, y es un humano quien decide si aplicarlo a los campos reales del ticket (que sí son controlados).
 - **La IA nunca puede tumbar la creación de un ticket.** La llamada a Gemini está aislada en su propia capa de manejo de errores (tipo de excepción propio, timeout, validación de la respuesta) — si falla, se registra el error y el ticket se crea de todas formas, sin sugerencia.
 - **Los `on_delete` de cada relación se eligieron caso por caso**, no por defecto: `PROTECT` donde se protege un historial (no perder los tickets de un cliente si su cuenta se borra), `CASCADE` donde el registro hijo no tiene sentido sin su padre (un comentario sin su ticket), `SET_NULL` donde la relación es opcional (un ticket sin agente asignado vuelve a quedar "sin asignar", no se bloquea ni se borra nada).
+- **Asignación de tickets**, los tickets se crean sin agente asignado. Solo el rol admin puede asignar un ticket a un agente específico. Los agentes no pueden auto-asignarse tickets ni ver tickets que no les fueron asignados.
 
 ---
 
