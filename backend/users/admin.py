@@ -16,6 +16,11 @@ class UserAdmin(BaseUserAdmin):
         return obj.profile.get_role_display()
     get_role.short_description = 'Role'
 
+    def get_inline_instances(self, request, obj=None):
+        if obj is None:  # None = estás creando un usuario nuevo
+            return []
+        return super().get_inline_instances(request, obj)
+
 admin.site.unregister(User)
 admin.site.register(User,UserAdmin)
  
