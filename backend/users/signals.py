@@ -3,7 +3,8 @@ from django.contrib.auth.models import User
 from django.dispatch import receiver
 from .models import Profile
 
-@receiver(post_save, sender= User)
-def create_profile_automatically(sender,instance,created,**kwargs):
+@receiver(post_save, sender=User)
+def create_profile_automatically(sender, instance, created, **kwargs):
+    print(f"SEÑAL EJECUTADA para user {instance.id}", flush=True)
     if created:
-        Profile.objects.create(user = instance)
+        Profile.objects.get_or_create(user=instance)
