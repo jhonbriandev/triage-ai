@@ -61,7 +61,7 @@ button {
   cursor: pointer;
 }
 .button-danger {
-  background: #c0392b;
+  background: #dc2626;
   padding: 0.3rem 0.7rem;
   font-size: 0.85rem;
 }
