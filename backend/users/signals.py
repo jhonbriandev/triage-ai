@@ -5,6 +5,5 @@ from .models import Profile
 
 @receiver(post_save, sender=User)
 def create_profile_automatically(sender, instance, created, **kwargs):
-    print(f"SEÑAL EJECUTADA para user {instance.id}", flush=True)
     if created:
         Profile.objects.get_or_create(user=instance)
