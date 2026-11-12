@@ -110,7 +110,7 @@ class PermissionAssignTicket(permissions.BasePermission):
         return request.user.profile.role == 'admin'
 
 # ============================================================
-# 🧠 GUÍA RÁPIDA DE CONCEPTOS USADOS EN ESTE ARCHIVO
+#  GUÍA RÁPIDA DE CONCEPTOS USADOS EN ESTE ARCHIVO
 # ============================================================
 #
 # request
@@ -166,7 +166,7 @@ class PermissionAssignTicket(permissions.BasePermission):
 # resultado, pero con _id sabes que solo estás comparando dos números.
 #
 # ============================================================
-# 🧠 MAPA MENTAL GENERAL
+#  MAPA MENTAL GENERAL
 # ============================================================
 #
 #                     PETICIÓN

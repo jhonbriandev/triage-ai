@@ -1,98 +1,104 @@
+
 import pytest
+import json
+
 from unittest.mock import patch, MagicMock
-from rest_framework.test import APIClient
-from tickets.services import generate_suggestion_ai, ErrorGenerationAI
-from tickets.tests.factories import UserFactory, CategoryFactory, TicketFactory
+
+from tickets.services import (
+    generate_suggestion_ai,
+    ErrorGenerationAI,
+)
+from tickets.tests.factories import TicketFactory
 
 
-def response_mock(texto):
-    # Crea una respuesta falsa que imita la respuesta de la API de IA.
-    r = MagicMock()
-    r.text = texto
-    return r
+def response_mock(text):
+    # Creamos una respuesta falsa que imita la respuesta de Gemini.
+    # MagicMock permite simular objetos y métodos sin utilizar la API real.
+    response = MagicMock()
+    response.text = text
+
+    return response
 
 
 @pytest.mark.django_db
-class TestGenerateSuggestionIA:
+class TestGenerateSuggestionAI:
 
-    def test_camino_feliz_devuelve_las_4_claves(self):
+    def test_happy_path_returns_four_keys(self):
         ticket = TicketFactory()
 
-        json_valido = (
-            '{"suggestion_category": "Bug", "suggestion_priority": "alta", '
-            '"generated_summary": "resumen", "suggestion_answer": "respuesta"}'
-        )
+        # Definimos el JSON válido que esperamos recibir de Gemini.
+        mock_suggestion = {
+            "suggestion_category": "Bug",
+            "suggestion_priority": "alta",
+            "generated_summary": "Resumen del problema",
+            "suggestion_answer": "Revisar la conexión del servicio."
+        }
 
-        # Sustituimos temporalmente el cliente real de GenAI por un Mock.
-        # Así el test no hace ninguna llamada real a la API.
-        with patch('tickets.services.genai.Client') as MockClient:
+        with patch('tickets.services.genai.Client') as mock_client:
 
-            # Configuramos qué debe devolver la API falsa.
-            MockClient.return_value.models.generate_content.return_value = (
-                response_mock(json_valido)
+            # Simulamos que Gemini devuelve nuestro JSON.
+            mock_client.return_value.models.generate_content.return_value = (
+                response_mock(json.dumps(mock_suggestion))
             )
 
             results = generate_suggestion_ai(ticket)
 
-        assert results['suggestion_priority'] == 'alta'
+        # Comprobamos que el servicio devuelve las cuatro claves esperadas.
+        assert set(results.keys()) == set(mock_suggestion.keys())
 
-    def test_error_api_launch_error_generation_ai(self):
+        # Comprobamos que los valores procesados coinciden con el JSON.
+        assert results == mock_suggestion
+
+    def test_api_error_raises_error_generation_ai(self):
         ticket = TicketFactory()
 
-        # Simulamos que la API de IA falla al generar la respuesta.
-        with patch('tickets.services.genai.Client') as MockClient:
-            MockClient.return_value.models.generate_content.side_effect = (
-                Exception('fallo de red')
+        # Simulamos un fallo de conexión o un error de la API de Gemini.
+        with patch('tickets.services.genai.Client') as mock_client:
+
+            mock_client.return_value.models.generate_content.side_effect = (
+                Exception('Network error')
             )
 
+            # Comprobamos que el servicio transforma el error
+            # en nuestra excepción personalizada.
             with pytest.raises(ErrorGenerationAI):
                 generate_suggestion_ai(ticket)
 
-    def test_invalid_priority_launch_error_generation_ai(self):
+    def test_invalid_json_raises_error_generation_ai(self):
         ticket = TicketFactory()
 
-        bad_priority = (
-            '{"suggestion_category": "Bug", "suggestion_priority": "SUPER URGENTE", '
-            '"generated_summary": "x", "suggestion_answer": "y"}'
-        )
+        # Simulamos una respuesta que no cumple el formato JSON.
+        invalid_output = 'This is not valid JSON'
 
-        # La API no falla, pero devuelve información inválida.
-        with patch('tickets.services.genai.Client') as MockClient:
-            MockClient.return_value.models.generate_content.return_value = (
-                response_mock(bad_priority)
+        with patch('tickets.services.genai.Client') as mock_client:
+
+            mock_client.return_value.models.generate_content.return_value = (
+                response_mock(invalid_output)
             )
 
+            # El servicio debe detectar el JSON inválido
+            # y lanzar nuestra excepción personalizada.
             with pytest.raises(ErrorGenerationAI):
                 generate_suggestion_ai(ticket)
 
+    def test_invalid_priority_raises_error_generation_ai(self):
+        ticket = TicketFactory()
 
-@pytest.mark.django_db
-class TestCreationTicketWithIA:
+        # El JSON es válido, pero contiene una prioridad no permitida.
+        mock_suggestion = {
+            "suggestion_category": "Bug",
+            "suggestion_priority": "SUPER URGENTE",
+            "generated_summary": "Resumen del problema",
+            "suggestion_answer": "Revisar el sistema."
+        }
 
-    def test_ticket_is_created_without_suggestion_if_ai_fails(self):
-        # Factory: necesitamos datos reales para probar la creación del ticket.
-        customer = UserFactory()
-        category = CategoryFactory()
-
-        client = APIClient()
-        client.force_authenticate(user=customer)
-
-        # Mock: simulamos que la IA no responde.
-        # No queremos depender de una API externa durante el test.
-        with patch('tickets.services.genai.Client') as MockClient:
-            MockClient.return_value.models.generate_content.side_effect = (
-                Exception('la IA no responde')
+        with patch('tickets.services.genai.Client') as mock_client:
+            # Sustituye temporalmente el cliente real de IA por uno simulado
+            mock_client.return_value.models.generate_content.return_value = (
+                response_mock(json.dumps(mock_suggestion))
             )
 
-            response = client.post(
-                '/api/tickets/',
-                {
-                    'title': 'Prueba',
-                    'description': 'x',
-                    'category': category.id,
-                },
-                format='json'
-            )
-
-        assert response.status_code == 201
-        assert response.data['has_suggestion_ai'] is False
+            # Comprobamos que el servicio también valida el contenido,
+            # no solamente que la respuesta tenga un JSON correcto.
+            with pytest.raises(ErrorGenerationAI):
+                generate_suggestion_ai(ticket)

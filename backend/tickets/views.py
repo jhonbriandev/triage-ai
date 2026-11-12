@@ -66,6 +66,7 @@ class TicketViewSet(viewsets.ModelViewSet):
     
     def perform_create(self, serializer):
         ticket = serializer.save(customer=self.request.user)
+        
         try:
             datos_ia = generate_suggestion_ai(ticket)
             SuggestionAi.objects.create(ticket=ticket, **datos_ia)
