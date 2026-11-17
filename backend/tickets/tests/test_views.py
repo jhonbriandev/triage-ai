@@ -274,3 +274,84 @@ class TestCreateTicket:
 
         # Una respuesta inválida no debe generar registros de sugerencias.
         assert not SuggestionAi.objects.filter(ticket=ticket).exists()
+
+    def test_critical_ticket_is_created_with_urgent_priority(self,api_client):
+        customer = UserFactory()
+        category = CategoryFactory()
+    
+        api_client.force_authenticate(user=customer)
+    
+        with patch('tickets.services.genai.Client') as mock_client:
+    
+            # Simulamos que Gemini no responde por un error de conexión.
+            mock_client.return_value.models.generate_content.side_effect = (
+                Exception('Network error')
+            )
+            response = api_client.post(
+                '/api/tickets/',
+                {
+                    'title': 'Caida total del sistema',
+                    'description': 'No funciona nada',
+                    'category': category.id,
+                },
+                format='json',
+            )
+    
+        # Aunque la IA falle, el ticket debe crearse correctamente.
+        assert response.status_code == 201
+        assert response.data['priority'] == 'urgente'
+
+    def test_normal_ticket_keeps_default_priority(self,api_client):
+        customer = UserFactory()
+        category = CategoryFactory()
+    
+        api_client.force_authenticate(user=customer)
+    
+        with patch('tickets.services.genai.Client') as mock_client:
+    
+            # Simulamos que Gemini no responde por un error de conexión.
+            mock_client.return_value.models.generate_content.side_effect = (
+                Exception('Network error')
+            )
+            response = api_client.post(
+                '/api/tickets/',
+                {
+                    'title': 'Duda sobre mi factura',
+                    'description': 'Quiero saber la fecha de corte',
+                    'category': category.id,
+                },
+                format='json',
+            )
+    
+        # Aunque la IA falle, el ticket debe crearse correctamente.
+        assert response.status_code == 201
+        assert response.data['priority'] == 'media'
+
+    def test_customer_cannot_set_priority_or_status_when_creating_ticket(self,api_client):
+        customer = UserFactory()
+        category = CategoryFactory()
+    
+        api_client.force_authenticate(user=customer)
+    
+        with patch('tickets.services.genai.Client') as mock_client:
+    
+            # Simulamos que Gemini no responde por un error de conexión.
+            mock_client.return_value.models.generate_content.side_effect = (
+                Exception('Network error')
+            )
+            response = api_client.post(
+                '/api/tickets/',
+                {
+                    'title': 'Duda sobre mi factura',
+                    'description': 'Quiero saber la fecha de corte',
+                    'category': category.id,
+                    'priority' : 'urgente',
+                    'status' : 'cerrado'
+                },
+                format='json',
+            )
+    
+        # Aunque la IA falle, el ticket debe crearse correctamente.
+        assert response.status_code == 201
+        assert response.data['priority'] == 'media'
+        assert response.data['status'] == 'abierto'

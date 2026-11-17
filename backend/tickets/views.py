@@ -4,6 +4,7 @@ from rest_framework.response import Response
 from django.db.models import Count
 from rest_framework import viewsets
 from rest_framework.exceptions import PermissionDenied
+from tickets.rules import has_critical_keywords
 from .models import Category, Ticket, Commentary, SuggestionAi
 from .serializers import CategorySerializer, TicketSerializer, CommentarySerializer, AgentSerializer
 from .permissions import PermissionCategory, PermissionTicket, PermissionCommentary, PermissionAssignTicket
@@ -65,8 +66,12 @@ class TicketViewSet(viewsets.ModelViewSet):
         return queryset
     
     def perform_create(self, serializer):
-        ticket = serializer.save(customer=self.request.user)
-        
+        title = serializer.validated_data.get('title','')
+        description = serializer.validated_data.get('description','')
+        if has_critical_keywords(f"{title} {description}"):
+            ticket = serializer.save(customer=self.request.user, priority = Ticket.Priority.URGENTE)
+        else:
+            ticket = serializer.save(customer=self.request.user)
         try:
             datos_ia = generate_suggestion_ai(ticket)
             SuggestionAi.objects.create(ticket=ticket, **datos_ia)

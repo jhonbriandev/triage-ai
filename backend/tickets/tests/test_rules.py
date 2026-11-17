@@ -7,7 +7,7 @@ from ..rules import has_critical_keywords
 #     assert has_critical_keywords(text) == expected
 
 # Usaremos la manera mas corta y facil para probar estas palabras criticas
-@pytest.mark.parametrize("text", [("Bloqueado"),("caida total"),("no funciona nada"),("perdida de datos"),("no puedo acceder"),("SEGURIDAD")])
+@pytest.mark.parametrize("text", [("caída total del servicio"),("caida total"),("NO FUNCIONA NADA"),("Tuvimos pérdida de datos ayer"),("No puedo acceder a mi cuenta"),("Mi usuario quedó bloqueado"),("Hay un problema de seguridad"),("Tenemos UNA caída total")])
 def test_has_critical_keywords_detects_critical_text(text):
     assert has_critical_keywords(text) is True
 
@@ -16,6 +16,17 @@ def test_has_critical_keywords_detects_critical_text(text):
 # def test_has_critical_keywords_ignores_normal_text(text, expected):
 #     assert has_critical_keywords(text) == expected
 
-@pytest.mark.parametrize("text", [("En espera"),("Es la tercera vez"),("Temblor"),("perdida de cables"),("Apurate"),("Desbloqueado")])
+@pytest.mark.parametrize("text", [("En espera"),("Es la tercera vez"),("Temblor"),(""),(None),("Desbloqueado")])
 def test_has_critical_keywords_ignores_normal_text(text):
     assert has_critical_keywords(text) is False
+    
+    
+@pytest.mark.parametrize("text", [("Ya esta desbloqueado")])   
+def test_has_critical_keywords_does_not_match_inside_other_words(text):
+    assert has_critical_keywords(text) is False
+    
+@pytest.mark.parametrize("text", [("No hay caída total"),("No hubo pérdida de datos"),("Sin pérdida de datos"),("No está bloqueado"),("No ha sido bloqueado")])   
+def test_has_critical_keywords_ignores_negated_phrases(text):
+    assert has_critical_keywords(text) is False
+# 4 test pasan excepto el de "No ha sido bloqueado" (True) porque esta negacion no esta contemplada
+# en nuestras expresiones, no tenemos la expresion "no ha sido..." restringida.

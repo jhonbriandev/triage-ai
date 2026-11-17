@@ -16,6 +16,14 @@ Documento informativo sobre cómo el proyecto genera sugerencias con IA al crear
 | 6   | ¿Hay un test del caso "la IA falla"?                                                         | **Sí.** El test simula un fallo de la IA con `patch`, comprueba que la API responde con estado `201` y que el ticket se creó sin sugerencia (`has_suggestion_ai is False`).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              | `tickets/tests/test_views.py` — `test_ticket_is_created_without_suggestion_if_ai_fails()` |
 | 7   | ¿Hay alguna línea donde la prioridad del ticket se asigne desde `suggestion_priority`?       | **No.** Las sugerencias se muestran en el admin o al agente encargado, y el agente gestiona manualmente la categoría, la prioridad y la respuesta.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       | No aplica: esa asignación no existe, por lo que no hay archivo ni función que citar.      |
 
+ACTUALIZACION:
+Estamos usando la funcion de palabras criticas, por lo tanto ahora algunas palabras lanzaran que el ticket obtenga la prioridad mas alta, la cual es URGENTE
+Tener en cuenta que, aun no hemos restringido que el usuario pueda pasar la prioridad o estado en formato JSOn por lo cual es algo que debemos de controlar proximamente con:
+
+```python
+@pytest.mark.xfail(reason="...")
+```
+
 ---
 
 ## Código de referencia
