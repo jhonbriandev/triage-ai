@@ -68,10 +68,16 @@ class TicketViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         title = serializer.validated_data.get('title','')
         description = serializer.validated_data.get('description','')
+        # Lo que se pasa a save() prevalece sobre el JSON del cliente
         if has_critical_keywords(f"{title} {description}"):
-            ticket = serializer.save(customer=self.request.user, priority = Ticket.Priority.URGENTE)
+            priority = Ticket.Priority.URGENTE
         else:
-            ticket = serializer.save(customer=self.request.user)
+            priority = Ticket.Priority.MEDIA   
+        ticket = serializer.save(
+            customer=self.request.user,
+            priority=priority,
+            status=Ticket.Status.ABIERTO,
+        )
         try:
             datos_ia = generate_suggestion_ai(ticket)
             SuggestionAi.objects.create(ticket=ticket, **datos_ia)

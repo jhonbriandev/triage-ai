@@ -326,32 +326,87 @@ class TestCreateTicket:
         # Aunque la IA falle, el ticket debe crearse correctamente.
         assert response.status_code == 201
         assert response.data['priority'] == 'media'
+        
+    # USANDO XFAIL, CORREGIDO PORQUE SE IMPLEMENTO QUE LA VIEW MANDE    
+    # @pytest.mark.parametrize(
+    # "text",
+    # [
+    #     pytest.param(
+    #         "urgente",
+    #         marks=pytest.mark.xfail(
+    #             reason="El cliente puede establecer la prioridad mediante JSON"
+    #         )
+    #     ),pytest.param(
+    #                 "cerrado",
+    #                 marks=pytest.mark.xfail(
+    #                     reason="El cliente puede establecer el estado mediante JSON"
+    #                 )
+    #             )
+    # ]
+    # )
+    # def test_customer_cannot_set_priority_or_status_when_creating_ticket(
+    #     self, api_client, text
+    # ):
+    #     customer = UserFactory()
+    #     category = CategoryFactory()
 
-    def test_customer_cannot_set_priority_or_status_when_creating_ticket(self,api_client):
+    #     api_client.force_authenticate(user=customer)
+
+    #     with patch('tickets.services.genai.Client') as mock_client:
+
+    #         # Simulamos que Gemini no responde por un error de conexión.
+    #         mock_client.return_value.models.generate_content.side_effect = (
+    #             Exception('Network error')
+    #         )
+
+    #         response = api_client.post(
+    #             '/api/tickets/',
+    #             {
+    #             'title': 'Duda sobre mi factura',
+    #             'description': 'Quiero saber la fecha de corte',
+    #             'category': category.id,
+    #             'priority': 'urgente',
+    #             'status': 'cerrado'
+    #             },
+    #             format='json',
+    #         )
+
+    #     # Aunque la IA falle, el ticket debe crearse correctamente.
+    #     assert response.status_code == 201
+    #     assert response.data['priority'] == 'media'
+    #     assert response.data['status'] == 'cerrado'
+    
+    def test_customer_cannot_set_priority_or_status_when_creating_ticket(
+        self, api_client
+    ):
         customer = UserFactory()
         category = CategoryFactory()
-    
+
         api_client.force_authenticate(user=customer)
-    
+
         with patch('tickets.services.genai.Client') as mock_client:
-    
+
             # Simulamos que Gemini no responde por un error de conexión.
             mock_client.return_value.models.generate_content.side_effect = (
                 Exception('Network error')
             )
+
             response = api_client.post(
                 '/api/tickets/',
                 {
-                    'title': 'Duda sobre mi factura',
-                    'description': 'Quiero saber la fecha de corte',
-                    'category': category.id,
-                    'priority' : 'urgente',
-                    'status' : 'cerrado'
+                'title': 'Duda sobre mi factura',
+                'description': 'Quiero saber la fecha de corte',
+                'category': category.id,
+                'priority': 'urgente',
+                'status': 'cerrado'
                 },
                 format='json',
             )
-    
+
         # Aunque la IA falle, el ticket debe crearse correctamente.
         assert response.status_code == 201
+
+        # El servidor determina la prioridad y el estado.
         assert response.data['priority'] == 'media'
         assert response.data['status'] == 'abierto'
+
